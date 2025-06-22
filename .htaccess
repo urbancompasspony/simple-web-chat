@@ -1,0 +1,78 @@
+# .htaccess para Chat PHP no Apache
+
+# Habilita rewrite engine
+RewriteEngine On
+
+# Força HTTPS (opcional - descomente se necessário)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Headers de segurança
+Header always set X-Content-Type-Options nosniff
+Header always set X-Frame-Options DENY
+Header always set X-XSS-Protection "1; mode=block"
+
+# Headers para CORS (se necessário)
+Header always set Access-Control-Allow-Origin "*"
+Header always set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+Header always set Access-Control-Allow-Headers "Content-Type, Authorization"
+
+# Cache para arquivos estáticos
+<FilesMatch "\.(css|js|png|jpg|jpeg|gif|ico|svg)$">
+    ExpiresActive On
+    ExpiresDefault "access plus 1 month"
+    Header set Cache-Control "public, immutable"
+</FilesMatch>
+
+# Não faz cache dos arquivos da API
+<FilesMatch "\.(php|json)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+</FilesMatch>
+
+# Protege arquivos de dados
+<FilesMatch "\.json$">
+    <RequireAll>
+        Require all denied
+    </RequireAll>
+</FilesMatch>
+
+# Permite acesso apenas aos arquivos necessários
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Compressão gzip
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/json
+</IfModule>
+
+# Configurações PHP específicas para o chat
+<IfModule mod_php.c>
+    php_value max_execution_time 30
+    php_value memory_limit 128M
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+    php_value max_input_vars 1000
+    php_flag display_errors Off
+    php_flag log_errors On
+</IfModule>
+
+# Bloqueia acesso direto aos arquivos de configuração
+<Files ~ "^\.">
+    Require all denied
+</Files>
+
+# Página de erro personalizada (opcional)
+ErrorDocument 404 /chat/index.php
+ErrorDocument 500 /chat/index.php
