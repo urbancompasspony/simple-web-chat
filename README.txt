@@ -1,66 +1,68 @@
 # simple-web-chat
 it is really simple!
 
-# Habilita módulos necessários
-sudo a2enmod rewrite
-sudo a2enmod headers
-sudo a2enmod deflate
-sudo a2enmod expires
+# Criar pasta do projeto
+mkdir chat-docker && cd chat-docker
 
-# Reinicia Apache
-sudo systemctl restart apache2
+# Copiar todos os arquivos criados:
+# - Dockerfile
+# - docker-compose.yml
+# - apache-chat.conf
+# - docker-entrypoint.sh
+# - index.php
+# - api.php
+# - .htaccess
+# - deploy.sh
 
-# Define permissões corretas
-sudo chown -R www-data:www-data /var/www/html/chat/
-sudo chmod 755 /var/www/html/chat/
-sudo chmod 644 /var/www/html/chat/*.php
-sudo chmod 644 /var/www/html/chat/.htaccess
+# Dar permissões
+chmod +x deploy.sh docker-entrypoint.sh
 
-# Cria pasta de dados com permissões de escrita
-mkdir -p /var/www/html/chat/data
-sudo chown www-data:www-data /var/www/html/chat/data
-sudo chmod 755 /var/www/html/chat/data
+# Opção 1: Deploy automático
+./deploy.sh deploy
 
-VHOST:
+# Opção 2: Deploy manual
+docker compose build --no-cache
+docker compose up -d
 
-# /etc/apache2/sites-available/chat.conf
-<VirtualHost *:80>
-    ServerName chat.seudominio.com
-    DocumentRoot /var/www/html/chat
-    
-    <Directory /var/www/html/chat>
-        AllowOverride All
-        Require all granted
-    </Directory>
-    
-    ErrorLog ${APACHE_LOG_DIR}/chat_error.log
-    CustomLog ${APACHE_LOG_DIR}/chat_access.log combined
-</VirtualHost>
+# Ver status
+docker compose ps
 
-Acesso:
+# Ver logs em tempo real
+docker compose logs -f chat-apache
 
-Local: http://localhost/chat/
-Rede: http://seu-ip/chat/
-Domínio: http://seudominio.com/chat/
+# Entrar no container
+docker compose exec chat-apache bash
 
-# 1. Copia os arquivos para o Apache
-sudo cp index.php /var/www/html/chat/
-sudo cp api.php /var/www/html/chat/
-sudo cp .htaccess /var/www/html/chat/
+# Restart do serviço
+docker compose restart chat-apache
 
-# 2. Define permissões
-sudo chown -R www-data:www-data /var/www/html/chat/
+# Parar tudo
+docker compose down
 
-# 3. Acessa o chat
-# http://localhost/chat/
+# Parar e remover volumes
+docker compose down -v
 
-# 1. Roda servidor WebSocket separado
-node server.js  # Na porta 3000
+# Local
+http://localhost:8080/chat/
 
-# 2. Configura proxy no Apache
-sudo a2enmod proxy proxy_http proxy_wstunnel
-sudo a2ensite chat-websocket.conf
-sudo systemctl reload apache2
+# Rede (substitua pelo IP da máquina)
+http://192.168.1.100:8080/chat/
 
-# 3. Acessa o chat
-# http://chat.seudominio.com/
+# Backup manual
+./backup.sh
+
+# Backup automático via container
+docker compose exec chat-backup sh
+
+# Restore (se necessário)
+docker compose cp backup.tar.gz chat-apache:/tmp/
+docker compose exec chat-apache tar -xzf /tmp/backup.tar.gz -C /var/www/html/chat/
+
+# Ver uso de recursos
+docker stats
+
+# Ver logs específicos
+docker compose logs chat-apache | grep ERROR
+
+# Verificar saúde
+docker compose exec chat-apache curl -f http://localhost/chat/
