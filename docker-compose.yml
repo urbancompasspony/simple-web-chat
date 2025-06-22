@@ -1,0 +1,60 @@
+# docker-compose.yml para Chat Apache + PHP
+version: '3.8'
+
+services:
+  chat-apache:
+    build: .
+    container_name: chat-apache-php
+    ports:
+      - "8080:80"
+    volumes:
+      # Persiste dados do chat
+      - chat_data:/var/www/html/chat/data
+      # Logs do Apache (opcional)
+      - ./logs:/var/log/apache2
+      # Para desenvolvimento - monta código fonte (descomente se necessário)
+      # - ./index.php:/var/www/html/chat/index.php
+      # - ./api.php:/var/www/html/chat/api.php
+    environment:
+      - APACHE_RUN_USER=www-data
+      - APACHE_RUN_GROUP=www-data
+      - APACHE_LOG_DIR=/var/log/apache2
+      - APACHE_LOCK_DIR=/var/lock/apache2
+      - APACHE_PID_FILE=/var/run/apache2/apache2.pid
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/chat/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - chat_network
+
+  # Serviço opcional de backup
+  chat-backup:
+    image: alpine:latest
+    container_name: chat-backup
+    volumes:
+      - chat_data:/data:ro
+      - ./backups:/backups
+    command: >
+      sh -c "
+        while true; do
+          sleep 86400;
+          tar -czf /backups/chat_backup_$$(date +%Y%m%d_%H%M%S).tar.gz -C /data .;
+          find /backups -name 'chat_backup_*.tar.gz' -mtime +7 -delete;
+        done
+      "
+    restart: unless-stopped
+    depends_on:
+      - chat-apache
+    networks:
+      - chat_network
+
+volumes:
+  chat_data:
+    driver: local
+
+networks:
+  chat_network:
+    driver: bridge
