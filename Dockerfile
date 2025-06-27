@@ -39,6 +39,7 @@ RUN mkdir -p /var/www/html/chat/data && \
 
 # Configuração personalizada do Apache
 COPY apache-chat.conf /etc/apache2/sites-available/chat.conf
+COPY manage-users.sh /usr/bin/manage-users.sh
 
 # Habilita site do chat
 RUN a2ensite chat && a2dissite 000-default
@@ -55,6 +56,7 @@ RUN echo "max_execution_time = 30" >> /usr/local/etc/php/conf.d/chat.ini && \
 # Script de inicialização
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/bin/manage-users.sh
 
 # Expõe porta 80
 EXPOSE 80
