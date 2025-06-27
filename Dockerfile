@@ -29,7 +29,6 @@ WORKDIR /var/www/html/chat
 COPY index.php /var/www/html/chat/
 COPY api.php /var/www/html/chat/
 COPY .htaccess /var/www/html/chat/
-COPY .htpasswd /var/www/html/chat/ 2>/dev/null || echo "Arquivo .htpasswd não encontrado - será criado via variáveis de ambiente"
 
 # Scripts de gerenciamento
 COPY docker-entrypoint.sh /usr/local/bin/
