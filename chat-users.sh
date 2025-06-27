@@ -303,3 +303,104 @@ show_menu() {
 
 # Execução
 if [ $# -eq 0 ]; then
+    # Modo interativo
+    show_menu
+else
+    # Modo CLI
+    check_container
+    
+    case $1 in
+        "list"|"l")
+            list_users
+            ;;
+        "add"|"a")
+            if [ ! -z "$2" ] && [ ! -z "$3" ]; then
+                USERNAME="$2"
+                PASSWORD="$3"
+                docker exec $CONTAINER_NAME bash -c "
+                    if [ -f /var/www/html/chat/.htpasswd ]; then
+                        htpasswd -b /var/www/html/chat/.htpasswd '$USERNAME' '$PASSWORD'
+                    else
+                        htpasswd -cb /var/www/html/chat/.htpasswd '$USERNAME' '$PASSWORD'
+                    fi
+                    chmod 644 /var/www/html/chat/.htpasswd
+                    chown www-data:www-data /var/www/html/chat/.htpasswd
+                    apache2ctl graceful
+                "
+                echo -e "${GREEN}✅ Usuário '$USERNAME' adicionado!${NC}"
+            else
+                add_user
+            fi
+            ;;
+        "remove"|"rm")
+            if [ ! -z "$2" ]; then
+                USERNAME="$2"
+                docker exec $CONTAINER_NAME bash -c "htpasswd -D /var/www/html/chat/.htpasswd '$USERNAME' && apache2ctl graceful" && \
+                echo -e "${GREEN}✅ Usuário '$USERNAME' removido!${NC}" || \
+                echo -e "${RED}❌ Usuário não encontrado${NC}"
+            else
+                remove_user
+            fi
+            ;;
+        "generate"|"gen")
+            if [ ! -z "$2" ]; then
+                USERNAME="$2"
+                PASSWORD=$(openssl rand -base64 12 | tr -d "=+/" | cut -c1-12)
+                docker exec $CONTAINER_NAME bash -c "
+                    if [ -f /var/www/html/chat/.htpasswd ]; then
+                        htpasswd -b /var/www/html/chat/.htpasswd '$USERNAME' '$PASSWORD'
+                    else
+                        htpasswd -cb /var/www/html/chat/.htpasswd '$USERNAME' '$PASSWORD'
+                    fi
+                    chmod 644 /var/www/html/chat/.htpasswd
+                    chown www-data:www-data /var/www/html/chat/.htpasswd
+                    apache2ctl graceful
+                "
+                echo -e "${GREEN}✅ Usuário '$USERNAME' criado!${NC}"
+                echo -e "${BLUE}🔑 Senha: $PASSWORD${NC}"
+                echo "Usuário: $USERNAME" >> chat-credentials.txt
+                echo "Senha: $PASSWORD" >> chat-credentials.txt
+                echo "Data: $(date)" >> chat-credentials.txt
+                echo "---" >> chat-credentials.txt
+            else
+                generate_user
+            fi
+            ;;
+        "status"|"s")
+            show_status
+            ;;
+        "backup"|"b")
+            backup_users
+            ;;
+        "shell"|"sh")
+            docker exec -it $CONTAINER_NAME bash
+            ;;
+        "help"|"-h"|"--help")
+            echo "Chat Users Manager - Comandos disponíveis:"
+            echo ""
+            echo "  list                 - Lista usuários"
+            echo "  add                  - Adiciona usuário (modo interativo)"
+            echo "  add USER PASS        - Adiciona usuário via CLI"
+            echo "  remove               - Remove usuário (modo interativo)"
+            echo "  remove USER          - Remove usuário via CLI"
+            echo "  generate             - Gera usuário com senha aleatória (modo interativo)"
+            echo "  generate USER        - Gera usuário com senha aleatória via CLI"
+            echo "  status               - Mostra status do sistema"
+            echo "  backup               - Faz backup dos usuários"
+            echo "  shell                - Abre shell no container"
+            echo "  help                 - Esta ajuda"
+            echo ""
+            echo "Uso: $0 [comando] ou $0 (modo interativo)"
+            echo ""
+            echo "Exemplos:"
+            echo "  $0 add joao senha123"
+            echo "  $0 generate admin"
+            echo "  $0 remove joao"
+            ;;
+        *)
+            echo -e "${RED}❌ Comando desconhecido: $1${NC}"
+            echo "Use: $0 help para ver comandos disponíveis"
+            exit 1
+            ;;
+    esac
+fi
