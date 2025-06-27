@@ -1,7 +1,14 @@
-# .htaccess para Chat PHP no Apache
+# .htaccess para Chat PHP no Apache com Autenticação
 
 # Habilita rewrite engine
 RewriteEngine On
+
+# AUTENTICAÇÃO BÁSICA - Protege todo o diretório do chat
+AuthType Basic
+AuthName "Chat Privado - Digite a senha"
+AuthBasicProvider file
+AuthUserFile /var/www/html/chat/.htpasswd
+Require valid-user
 
 # Força HTTPS (opcional - descomente se necessário)
 # RewriteCond %{HTTPS} off
@@ -31,8 +38,8 @@ Header always set Access-Control-Allow-Headers "Content-Type, Authorization"
     Header set Expires "0"
 </FilesMatch>
 
-# Protege arquivos de dados
-<FilesMatch "\.json$">
+# Protege arquivos de dados E o arquivo de senhas
+<FilesMatch "\.(json|htpasswd)$">
     <RequireAll>
         Require all denied
     </RequireAll>
