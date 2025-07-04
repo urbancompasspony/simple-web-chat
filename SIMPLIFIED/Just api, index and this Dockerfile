@@ -1,0 +1,33 @@
+# Dockerfile simples para Chat PHP
+FROM php:8.2-apache
+
+# Instala dependências básicas
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Habilita mod_rewrite (já tem PHP integrado)
+RUN a2enmod rewrite
+
+# Cria pasta de dados
+RUN mkdir -p /var/www/html/data
+
+# Copia arquivos PHP
+COPY index.php /var/www/html/
+COPY api.php /var/www/html/
+
+# Cria arquivos JSON iniciais
+RUN echo '{"messages":[]}' > /var/www/html/data/messages.json && \
+    echo '{"users":[]}' > /var/www/html/data/users.json
+
+# Define permissões
+RUN chown -R www-data:www-data /var/www/html/ && \
+    chmod 644 /var/www/html/*.php && \
+    chmod 755 /var/www/html/data && \
+    chmod 644 /var/www/html/data/*.json
+
+# Expõe porta 80
+EXPOSE 80
+
+# Comando padrão do Apache
+CMD ["apache2-foreground"]
