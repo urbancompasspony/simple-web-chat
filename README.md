@@ -386,43 +386,9 @@ Para grandes volumes, considere migrar para MySQL/PostgreSQL:
 $pdo = new PDO('mysql:host=db;dbname=chat', $user, $pass);
 ```
 
-## 🤝 Contribuição
-
-1. **Fork** o repositório
-2. Crie uma **branch** para sua feature (`git checkout -b feature/nova-feature`)
-3. **Commit** suas mudanças (`git commit -am 'Adiciona nova feature'`)
-4. **Push** para a branch (`git push origin feature/nova-feature`)
-5. Abra um **Pull Request**
-
-### Diretrizes de Contribuição
-
-- Siga PSR-12 para código PHP
-- Teste todos os scripts antes de enviar
-- Documente novas features
-- Mantenha compatibilidade com versões anteriores
-
 ## 📝 Licença
 
 Este projeto está sob a licença **MIT**. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
-
-## 👨‍💻 Autor
-
-**Zóio The Green Eye**
-- GitHub: [@zoio-the-green-eye](#)
-- Website: [linuxuniverse.com.br](#)
-
-## 🙏 Agradecimentos
-
-- **Apache Foundation** - Servidor web
-- **PHP Community** - Linguagem de programação
-- **Docker** - Containerização
-- **Contribuidores** - Melhorias e sugestões
-
-## 📞 Suporte
-
-- **Issues**: [GitHub Issues](#)
-- **Discussões**: [GitHub Discussions](#)
-- **Email**: contato@exemplo.com
 
 ---
 
